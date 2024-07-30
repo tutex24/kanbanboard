@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import PlusIcon from '../icons/PlusIcon'
-import { Column, Id } from '../types'
+import { Column, Id, Task } from '../types'
 import ColumnContainer from './ColumnContainer'
 import {
     DndContext,
@@ -17,12 +17,13 @@ import { createPortal } from 'react-dom'
 function KanbanBoard() {
     const [columns, setColumns] = useState<Column[]>([])
     const columnsId = useMemo(() => columns.map((col) => col.id), [columns])
-    console.log(columns)
+
+    const [tasks, setTasks] = useState<Task[]>([])
 
     const [activeColumn, setActiveColumn] = useState<Column | null>(null)
 
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 300 } }),
+        useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
     )
 
     return (
@@ -40,6 +41,7 @@ function KanbanBoard() {
                                     key={col.id}
                                     column={col}
                                     deleteColumn={deleteColumn}
+                                    updateColumn={updateColumn}
                                 />
                             ))}
                         </SortableContext>
@@ -65,7 +67,7 @@ function KanbanBoard() {
 							"
                     >
                         <PlusIcon />
-                        Add Task
+                        New
                     </button>
                 </div>
 
@@ -75,6 +77,8 @@ function KanbanBoard() {
                             <ColumnContainer
                                 column={activeColumn}
                                 deleteColumn={deleteColumn}
+                                updateColumn={updateColumn}
+                                createTask={createTask}
                             />
                         )}
                     </DragOverlay>,
@@ -95,6 +99,14 @@ function KanbanBoard() {
     function deleteColumn(id: Id) {
         const filteredColumns = columns.filter((col) => col.id !== id)
         setColumns(filteredColumns)
+    }
+
+    function updateColumn(id: Id, title: string) {
+        const newColumns = columns.map((col) => {
+            if (col.id !== id) return col
+            return { ...col, title }
+        })
+        setColumns(newColumns)
     }
 
     function onDragStart(event: DragStartEvent) {
